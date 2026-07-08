@@ -203,8 +203,4 @@ void analyzeKmerDistribution(const unordered_map<string, int>& kmerFreq, int k, 
     } else {
         cerr << "Warning: Could not write " << csvFilename << endl;
     }
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> dd56447 (Update all source files with latest changes)
