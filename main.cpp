@@ -114,4 +114,8 @@ int main() {
     cout << "   input --- python plot_kmer.py --- generate the chart." << endl;
 
     return 0;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> dd56447 (Update all source files with latest changes)

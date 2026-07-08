@@ -10,4 +10,8 @@ std::vector<std::string> extractSequences(const std::string& filename);
 std::unordered_map<std::string, int> computeKmerFrequencies(const std::vector<std::string>& sequences, int k);
 void analyzeKmerDistribution(const std::unordered_map<std::string, int>& kmerFreq, int k, int topN, const std::string& filename);
 
+<<<<<<< HEAD
 #endif
+=======
+#endif
+>>>>>>> dd56447 (Update all source files with latest changes)
