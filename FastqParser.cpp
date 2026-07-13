@@ -6,9 +6,7 @@
 
 using namespace std;
 
-// ============================================================
-// 辅助排序函数（从大到小）
-// ============================================================
+// 辅助排序函数（从大到小）（Helper sorting function (descending order)）
 void sortHigh(vector<pair<string, int> >& vec) {
     for (size_t i = 0; i < vec.size(); ++i) {
         for (size_t j = i + 1; j < vec.size(); ++j) {
@@ -19,9 +17,7 @@ void sortHigh(vector<pair<string, int> >& vec) {
     }
 }
 
-// ============================================================
-// 辅助排序函数（从小到大）
-// ============================================================
+// 辅助排序函数（从小到大）（Helper sorting function (ascending order)）
 void sortLow(vector<pair<string, int> >& vec) {
     for (size_t i = 0; i < vec.size(); ++i) {
         for (size_t j = i + 1; j < vec.size(); ++j) {
@@ -32,9 +28,7 @@ void sortLow(vector<pair<string, int> >& vec) {
     }
 }
 
-// ============================================================
-// 1. 统计序列条数
-// ============================================================
+// 1. 统计序列条数（Count the number of sequences）
 int countReads(const string& filename) {
     ifstream file(filename.c_str());
     if (!file.is_open()) {
@@ -53,9 +47,7 @@ int countReads(const string& filename) {
     return readCount;
 }
 
-// ============================================================
-// 2. 提取所有序列
-// ============================================================
+// 2. 提取所有序列（Extract all sequences）
 vector<string> extractSequences(const string& filename) {
     vector<string> sequences;
     ifstream file(filename.c_str());
@@ -77,9 +69,7 @@ vector<string> extractSequences(const string& filename) {
     return sequences;
 }
 
-// ============================================================
-// 3. 计算 K-mer 频率
-// ============================================================
+// 3. 计算 K-mer 频率（Calculate K-mer frequencies）
 unordered_map<string, int> computeKmerFrequencies(const vector<string>& sequences, int k) {
     unordered_map<string, int> kmerCount;
 
@@ -100,9 +90,7 @@ unordered_map<string, int> computeKmerFrequencies(const vector<string>& sequence
     return kmerCount;
 }
 
-// ============================================================
-// 4. 分析 k-mer 分布 + 异常检测 + CSV 导出
-// ============================================================
+// 4. 分析 k-mer 分布 + 异常检测 + CSV 导出 （k-mer distribution analysis + anomaly detection + CSV export）
 void analyzeKmerDistribution(const unordered_map<string, int>& kmerFreq, int k, int topN, const string& filename) {
     if (kmerFreq.empty()) {
         cout << "No k-mers to analyze." << endl;
@@ -184,7 +172,7 @@ void analyzeKmerDistribution(const unordered_map<string, int>& kmerFreq, int k, 
         }
     }
 
-    // ---- 导出 CSV（使用传入的 filename，它已经是合并后的名称） ----
+    // 导出 CSV（使用传入的 filename，它已经是合并后的名称）
     string csvFilename = filename + "_k" + to_string(k) + "_top" + to_string(topN) + ".csv";
 
     ofstream outFile(csvFilename.c_str());

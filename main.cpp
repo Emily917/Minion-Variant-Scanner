@@ -3,19 +3,19 @@
 
 using namespace std;
 
-//g++ *.cpp -o scanner && ./scanner 开始输入终端
-//python plot_kmer.py 生成图像
+//g++ *.cpp -o scanner && ./scanner 开始输入终端（Start terminal input）
+//python plot_kmer.py 生成图像 （generate graph）
 
 int main() {
     cout << "=== Minion Variant Scanner (Interactive Mode) ===" << endl;
     cout << endl;
 
-    // ---- 交互式输入 ----
+    // 交互式输入（Interactive input）
     string inputLine;
     cout << "FASTQ file name（using space blank if there's more than 1 file, eg: SRR390728_1.fastq SRR390728_2.fastq）: ";
     getline(cin, inputLine);
 
-    // 用空格分割文件名
+    // 用空格分割文件名（Split filenames by spaces.）
     vector<string> filenames;
     string currentFile;
     for (size_t i = 0; i <= inputLine.length(); ++i) {
@@ -52,7 +52,7 @@ int main() {
     cout << "  Top N: " << topN << endl;
     cout << endl;
 
-    // ---- 1. 统计并提取所有文件的序列 ----
+    // 1. 统计并提取所有文件的序列 （Compile and extract the sequences from all files.）
     vector<string> allSequences;
     int totalReads = 0;
 
@@ -71,7 +71,7 @@ int main() {
         vector<string> sequences = extractSequences(filename);
         cout << "  Successfully extracted: " << sequences.size() << " sequences" << endl;
 
-        // 合并到总容器
+        // 合并到总容器 （ Merge into the main container）
         allSequences.insert(allSequences.end(), sequences.begin(), sequences.end());
         cout << "  Cumulative total sequence: " << allSequences.size() << endl;
         cout << endl;
@@ -86,11 +86,11 @@ int main() {
     cout << "Total after consolidation: " << allSequences.size() << " sequences" << endl;
     cout << "========================================" << endl;
 
-    // ---- 2. 计算 K-mer 频率 ----
+    // 2. 计算 K-mer 频率 （Calculate K-mer frequencies）
     cout << "Calculate " << k << "-mer frequencies..." << endl;
     unordered_map<string, int> kmerFreq = computeKmerFrequencies(allSequences, k);
 
-    // ---- 3. 生成合并后的文件名（用于 CSV 和 PNG 命名） ----
+    // 3. 生成合并后的文件名（用于 CSV 和 PNG 命名）（Generate the merged filename (for CSV and PNG naming)）
     string mergedName;
     for (size_t i = 0; i < filenames.size(); ++i) {
         // 去掉 .fastq 或 .fq 后缀
@@ -105,7 +105,7 @@ int main() {
         mergedName += baseName;
     }
 
-    // ---- 4. 分析并导出 CSV（传入合并后的文件名） ----
+    // 4. 分析并导出 CSV（传入合并后的文件名）（Analyze and export to CSV (pass in the merged filename)）
     analyzeKmerDistribution(kmerFreq, k, topN, mergedName);
 
     cout << "\n✅ All analyses complete！" << endl;
