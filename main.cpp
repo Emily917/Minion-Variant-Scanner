@@ -1,117 +1,166 @@
 #include <iostream>
+#include <string>
+#include <vector>
+#include <chrono>
+#include <cstdlib>  // for system()
 #include "FastqParser.hpp"
 
 using namespace std;
 
-//g++ *.cpp -o scanner && ./scanner 开始输入终端（Start terminal input）
-//python plot_kmer.py 生成图像 （generate graph）
+/*
+cd /Users/e./Desktop/Minion-Variant-Scanner
+ source .venv/bin/activate 
+./scanner 
+（运行指令）
+
+source .venv/bin/activate 
+python plot_kmer.py 
+（绘图指令）
+*/
+
 
 int main() {
-    cout << "=== Minion Variant Scanner (Interactive Mode) ===" << endl;
+    cout << "=== Minion Variant Scanner v2.0 ===" << endl;
+    cout << "Support: 3-line & 4-line FASTQ format" << endl;
     cout << endl;
 
-    // 交互式输入（Interactive input）
-    string inputLine;
-    cout << "FASTQ file name（using space blank if there's more than 1 file, eg: SRR390728_1.fastq SRR390728_2.fastq）: ";
-    getline(cin, inputLine);
+    while (true) {  // 支持多次分析
+        // 交互式输入
+        string inputLine;
+        cout << "FASTQ file name (space separated, or 'quit' to exit): ";
+        getline(cin, inputLine);
 
-    // 用空格分割文件名（Split filenames by spaces.）
-    vector<string> filenames;
-    string currentFile;
-    for (size_t i = 0; i <= inputLine.length(); ++i) {
-        if (i == inputLine.length() || inputLine[i] == ' ') {
-            if (!currentFile.empty()) {
-                filenames.push_back(currentFile);
-                currentFile.clear();
-            }
-        } else {
-            currentFile += inputLine[i];
+        if (inputLine == "quit" || inputLine == "q" || inputLine == "exit") {
+            cout << "Goodbye!" << endl;
+            break;
         }
-    }
 
-    if (filenames.empty()) {
-        cout << "error: didn't recognize File name" << endl;
-        return 1;
-    }
+        // 分割文件名
+        vector<string> filenames;
+        string currentFile;
+        for (size_t i = 0; i <= inputLine.length(); ++i) {
+            if (i == inputLine.length() || inputLine[i] == ' ') {
+                if (!currentFile.empty()) {
+                    filenames.push_back(currentFile);
+                    currentFile.clear();
+                }
+            } else {
+                currentFile += inputLine[i];
+            }
+        }
 
-    int k;
-    cout << "Input K-mer length（eg: 11）: ";
-    cin >> k;
-
-    int topN;
-    cout << "Input Top N high/low frequency（eg: 10）: ";
-    cin >> topN;
-
-    cout << endl;
-    cout << "Analyzing..." << endl;
-    cout << "  Number of files: " << filenames.size() << endl;
-    for (size_t i = 0; i < filenames.size(); ++i) {
-        cout << "    " << (i + 1) << ". " << filenames[i] << endl;
-    }
-    cout << "  K-mer length: " << k << endl;
-    cout << "  Top N: " << topN << endl;
-    cout << endl;
-
-    // 1. 统计并提取所有文件的序列 （Compile and extract the sequences from all files.）
-    vector<string> allSequences;
-    int totalReads = 0;
-
-    for (size_t i = 0; i < filenames.size(); ++i) {
-        string filename = filenames[i];
-        cout << "[" << (i + 1) << "/" << filenames.size() << "] read files: " << filename << endl;
-
-        int readCount = countReads(filename);
-        if (readCount < 0) {
-            cout << "  Jump（can't open the file）" << endl;
+        if (filenames.empty()) {
+            cout << "Error: No filename provided" << endl;
             continue;
         }
-        totalReads += readCount;
-        cout << "  Sequence number: " << readCount << endl;
 
-        vector<string> sequences = extractSequences(filename);
-        cout << "  Successfully extracted: " << sequences.size() << " sequences" << endl;
+        int k;
+        cout << "K-mer length (default 11): ";
+        string kInput;
+        getline(cin, kInput);
+        if (!kInput.empty()) k = stoi(kInput);
+        else k = 11;
 
-        // 合并到总容器 （ Merge into the main container）
-        allSequences.insert(allSequences.end(), sequences.begin(), sequences.end());
-        cout << "  Cumulative total sequence: " << allSequences.size() << endl;
+        int topN;
+        cout << "Top N (default 10): ";
+        string nInput;
+        getline(cin, nInput);
+        if (!nInput.empty()) topN = stoi(nInput);
+        else topN = 10;
+
         cout << endl;
-    }
-
-    if (allSequences.empty()) {
-        cout << "Error: Failed to read any sequences." << endl;
-        return 1;
-    }
-
-    cout << "========================================" << endl;
-    cout << "Total after consolidation: " << allSequences.size() << " sequences" << endl;
-    cout << "========================================" << endl;
-
-    // 2. 计算 K-mer 频率 （Calculate K-mer frequencies）
-    cout << "Calculate " << k << "-mer frequencies..." << endl;
-    unordered_map<string, int> kmerFreq = computeKmerFrequencies(allSequences, k);
-
-    // 3. 生成合并后的文件名（用于 CSV 和 PNG 命名）（Generate the merged filename (for CSV and PNG naming)）
-    string mergedName;
-    for (size_t i = 0; i < filenames.size(); ++i) {
-        // 去掉 .fastq 或 .fq 后缀
-        string baseName = filenames[i];
-        size_t dotPos = baseName.find_last_of('.');
-        if (dotPos != string::npos) {
-            baseName = baseName.substr(0, dotPos);
+        cout << "Analyzing..." << endl;
+        cout << "  Files: " << filenames.size() << endl;
+        for (size_t i = 0; i < filenames.size(); ++i) {
+            cout << "    " << (i+1) << ". " << filenames[i] << endl;
         }
-        if (i > 0) {
-            mergedName += "_and_";
+        cout << "  K-mer length: " << k << endl;
+        cout << "  Top N: " << topN << endl;
+        cout << endl;
+
+        auto startTime = chrono::high_resolution_clock::now();
+
+        // 创建解析器
+        FastqParser parser;
+
+        // 读取所有序列
+        vector<string> allSequences;
+        allSequences.reserve(1000000);
+
+        int totalReads = 0;
+        for (size_t i = 0; i < filenames.size(); ++i) {
+            cout << "[" << (i+1) << "/" << filenames.size() << "] Reading: " << filenames[i] << endl;
+
+            int readCount = parser.countReads(filenames[i]);
+            if (readCount < 0) {
+                cout << "  ⚠️  Skipping file" << endl;
+                continue;
+            }
+            totalReads += readCount;
+            cout << "  Total reads: " << readCount << endl;
+
+            vector<string> sequences = parser.extractSequences(filenames[i], 0);
+            allSequences.insert(allSequences.end(), sequences.begin(), sequences.end());
+
+            cout << "  Cumulative: " << allSequences.size() << " sequences" << endl;
+            cout << endl;
         }
-        mergedName += baseName;
+
+        if (allSequences.empty()) {
+            cout << "Error: No valid sequences read" << endl;
+            continue;
+        }
+
+        cout << "========================================" << endl;
+        cout << "Total sequences: " << allSequences.size() << endl;
+        cout << "========================================" << endl;
+
+        // 计算K-mer频率
+        cout << "\nCalculating " << k << "-mer frequencies..." << endl;
+        auto kmerStart = chrono::high_resolution_clock::now();
+
+        unordered_map<uint64_t, int> kmerFreq = parser.computeKmerFrequencies(allSequences, k);
+
+        auto kmerEnd = chrono::high_resolution_clock::now();
+        chrono::duration<double> kmerTime = kmerEnd - kmerStart;
+        cout << "  K-mer computation time: " << kmerTime.count() << " seconds" << endl;
+        cout << "  Distinct k-mers: " << kmerFreq.size() << endl;
+
+        // 生成输出文件名
+        string mergedName;
+        for (size_t i = 0; i < filenames.size(); ++i) {
+            string baseName = filenames[i];
+            size_t dotPos = baseName.find_last_of('.');
+            if (dotPos != string::npos) {
+                baseName = baseName.substr(0, dotPos);
+            }
+            if (i > 0) mergedName += "_and_";
+            mergedName += baseName;
+        }
+
+        // 分析并导出
+        parser.analyzeAndExport(kmerFreq, k, topN, mergedName);
+
+        auto endTime = chrono::high_resolution_clock::now();
+        chrono::duration<double> totalTime = endTime - startTime;
+        cout << "\n⏱️  Total execution time: " << totalTime.count() << " seconds" << endl;
+
+        // ===== 关键改进：自动运行 Python 绘图 =====
+        cout << "\n📊 Generating plot from CSV..." << endl;
+        int result = system("python plot_kmer.py");
+        if (result == 0) {
+            cout << "✅ Plot generated successfully!" << endl;
+            cout << "   Check: ~/Desktop/Minion_Results/" << endl;
+        } else {
+            cout << "⚠️  Could not run plot_kmer.py" << endl;
+            cout << "   You can manually run: python plot_kmer.py" << endl;
+        }
+
+        cout << "\n========================================" << endl;
+        cout << "✅ Analysis and plot complete!" << endl;
+        cout << "========================================" << endl;
+        cout << "\nPress Enter to analyze another file, or type 'quit' at the prompt..." << endl;
     }
-
-    // 4. 分析并导出 CSV（传入合并后的文件名）（Analyze and export to CSV (pass in the merged filename)）
-    analyzeKmerDistribution(kmerFreq, k, topN, mergedName);
-
-    cout << "\n✅ All analyses complete！" << endl;
-    cout << "   Merge file: " << mergedName << endl;
-    cout << "   CSV file: " << mergedName << "_k" << k << "_top" << topN << ".csv" << endl;
-    cout << "   input --- python plot_kmer.py --- generate the chart." << endl;
 
     return 0;
 }
