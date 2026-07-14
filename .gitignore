@@ -1,4 +1,5 @@
 # 编译生成的可执行文件
+FastqParser
 scanner
 main
 *.o
@@ -20,3 +21,4 @@ tempCodeRunnerFile.cpp
 *.tmp
 *.csv
 *.png
+*.fastq
