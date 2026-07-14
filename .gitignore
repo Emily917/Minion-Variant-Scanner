@@ -22,4 +22,7 @@ tempCodeRunnerFile.cpp
 *.csv
 *.png
 *.fastq
+*.fq
+*.fastq.gz
+*.fq.gz
 
