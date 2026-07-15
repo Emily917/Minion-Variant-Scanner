@@ -87,7 +87,8 @@ Merge file: SRR390728_1
 CSV file: SRR390728_1_k11_top10.csv
 input --- python plot_kmer.py --- generate the chart.
 
-<img width="983" height="491" alt="Screenshot 2026-07-13 at 02 29 32" src="https://github.com/user-attachments/assets/53337481-8035-4de3-b449-3c6b8c2cf1f1" />
+<img width="2383" height="891" alt="SRR390728_1_and_SRR390728_2_k11_top10" src="https://github.com/user-attachments/assets/1889ff97-6c00-4cf8-8c89-cc23ca8dbe72" />
+
 
 ## 🛠️ Build & Run
 
